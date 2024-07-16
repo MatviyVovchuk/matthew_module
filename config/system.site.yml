@@ -2,7 +2,7 @@ _core:
   default_config_hash: VDJxTZtQR21qB4lvOq8zszJZLvLKrSPQpdn2E3T71Ww
 langcode: en
 uuid: 169dde8b-1d72-4754-9473-4ce9dfafa847
-name: 'My Drupal 9 Site'
+name: 'First module'
 mail: admin@example.com
 slogan: ''
 page:

@@ -1,0 +1,7 @@
+matviyvovchuk.cats:
+  path: '/matthew/cats'
+  defaults:
+    _controller: '\Drupal\matthew\Controller\CatsController::content'
+    _title: 'Hello! You can add here a photo of your cat.'
+  requirements:
+    _permission: 'access content'
