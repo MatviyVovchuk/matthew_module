@@ -16,10 +16,13 @@ class CatsController extends ControllerBase {
    *   Render array for the Cats page content.
    */
   public function content() {
-    $build = [
-      '#markup' => '<p>Hello! You can add here a photo of your cat.</p>',
-    ];
-    return $build;
-  }
+    $content = [];
 
+    $content['title'] = 'Matthew cats';
+    $content['content'] = 'Hello! You can add here a photo of your cat.';
+    return [
+      '#theme' => 'cats',
+      '#content' => $content,
+    ];
+  }
 }

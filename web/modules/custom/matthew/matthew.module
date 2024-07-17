@@ -1,0 +1,16 @@
+<?php
+
+use Drupal\Core\Render\Element;
+
+/**
+ * Implements hook_theme().
+ */
+function matthew_theme($existing, $type, $theme, $path) {
+  return [
+    'cats' => [
+      'variables' => [
+        'content' => NULL,
+      ]
+    ],
+  ];
+}

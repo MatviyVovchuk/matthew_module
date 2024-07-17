@@ -1,0 +1,18 @@
+uuid: 5e8d5c42-f0ed-4a58-ad54-dd756ba2a4d4
+langcode: en
+status: true
+dependencies:
+  theme:
+    - matthew
+id: matthew_primaryadminactions
+theme: matthew
+region: content
+weight: -6
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }

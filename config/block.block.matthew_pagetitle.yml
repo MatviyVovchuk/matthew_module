@@ -1,0 +1,18 @@
+uuid: 88fec93d-2ffd-4bc8-8f1d-c1fca0322398
+langcode: en
+status: true
+dependencies:
+  theme:
+    - matthew
+id: matthew_pagetitle
+theme: matthew
+region: header
+weight: 0
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  label_display: '0'
+  provider: core
+visibility: {  }
