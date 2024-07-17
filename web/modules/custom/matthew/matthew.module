@@ -6,11 +6,14 @@ use Drupal\Core\Render\Element;
  * Implements hook_theme().
  */
 function matthew_theme($existing, $type, $theme, $path) {
+  $extensionPathResolver = \Drupal::service('extension.path.resolver');
   return [
     'cats' => [
       'variables' => [
         'content' => NULL,
-      ]
+      ],
+      'template' => 'cats',
+      'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
     ],
   ];
 }

@@ -9,7 +9,7 @@
 /.docksal/
 /*.sql
 /.github/
-/web/themes/custom/matthew/node_modules
+/web/themes/custom/*/node_modules/*
 
 # Ignore local settings
 /web/sites/*/settings.local.php
