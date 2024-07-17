@@ -8,7 +8,11 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class MatthewCatsForm.
+ * Provides a form to add a cat's name.
+ *
+ * This form allows users to input and submit their cat's name. The name
+ * must be between 2 and 32 characters long. Upon submission, a message
+ * will be displayed confirming the cat's name has been added.
  */
 class MatthewCatsForm extends FormBase {
 
@@ -20,7 +24,7 @@ class MatthewCatsForm extends FormBase {
   protected $messenger;
 
   /**
-   * Constructs a MatthewCatsForm object.
+   * Constructs a new object.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
