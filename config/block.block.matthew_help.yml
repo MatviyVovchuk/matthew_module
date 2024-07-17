@@ -1,0 +1,22 @@
+uuid: 7d18e323-84d6-4794-810f-f13ace4e57a5
+langcode: en
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - matthew
+_core:
+  default_config_hash: VfPFqqxfkomud5CO8DUijw85QIl9GIxh_nIxLOYESxg
+id: matthew_help
+theme: matthew
+region: sidebar_first
+weight: 0
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  label_display: '0'
+  provider: help
+visibility: {  }

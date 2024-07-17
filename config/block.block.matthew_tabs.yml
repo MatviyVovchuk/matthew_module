@@ -1,0 +1,20 @@
+uuid: d1cb73a4-e76f-4069-9055-88830baf777a
+langcode: en
+status: true
+dependencies:
+  theme:
+    - matthew
+id: matthew_tabs
+theme: matthew
+region: header
+weight: 0
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Primary tabs'
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: false
+visibility: {  }

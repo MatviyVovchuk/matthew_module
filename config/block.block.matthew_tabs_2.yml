@@ -1,0 +1,20 @@
+uuid: 8513c339-ddd4-4453-b002-8fab2adb5185
+langcode: en
+status: true
+dependencies:
+  theme:
+    - matthew
+id: matthew_tabs_2
+theme: matthew
+region: pre_content
+weight: 0
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Secondary tabs'
+  label_display: '0'
+  provider: core
+  primary: false
+  secondary: true
+visibility: {  }

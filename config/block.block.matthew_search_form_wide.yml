@@ -1,0 +1,23 @@
+uuid: 93652138-7eaa-4bb3-9f34-d3900b50e7d0
+langcode: en
+status: false
+dependencies:
+  module:
+    - search
+  theme:
+    - matthew
+_core:
+  default_config_hash: imMyHD6LYci0gtXq56qr9ZKGHzbEG9uFydrN5EhKtSU
+id: matthew_search_form_wide
+theme: matthew
+region: header
+weight: -5
+provider: null
+plugin: search_form_block
+settings:
+  id: search_form_block
+  label: 'Search form (wide)'
+  label_display: '0'
+  provider: search
+  page_id: ''
+visibility: {  }

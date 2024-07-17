@@ -1,0 +1,20 @@
+uuid: 93fd4e9d-85f0-461b-ba5b-5368d2ffded3
+langcode: en
+status: false
+dependencies:
+  theme:
+    - matthew
+_core:
+  default_config_hash: Q9_2whdOj1YIomfvsIfopROW4FT_X5pY0DjdOiOaQ5U
+id: matthew_primary_admin_actions
+theme: matthew
+region: highlighted
+weight: -5
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }
