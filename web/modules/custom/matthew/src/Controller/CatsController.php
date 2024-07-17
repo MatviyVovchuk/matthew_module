@@ -19,7 +19,7 @@ class CatsController extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * Constructs a CatsController object.
+   * Constructs a new object.
    *
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder service.

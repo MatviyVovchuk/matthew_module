@@ -4,9 +4,3 @@ global-styling:
     theme:
       dest/css/style.css: {}
       dest/css/style.min.css: {}
-
-global-scripts:
-  version: 1.x
-  js:
-    dest/js/all.js: {}
-    dest/js/all.min.js: {}

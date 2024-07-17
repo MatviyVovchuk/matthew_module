@@ -4,11 +4,39 @@ namespace Drupal\matthew\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class MatthewCatsForm.
  */
 class MatthewCatsForm extends FormBase {
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * Constructs a MatthewCatsForm object.
+   *
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   */
+  public function __construct(MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('messenger')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -57,6 +85,6 @@ class MatthewCatsForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // For now just display a message.
-    \Drupal::messenger()->addMessage($this->t('Cat named @name added successfully!', ['@name' => $form_state->getValue('cat_name')]));
+    $this->messenger->addMessage($this->t('Cat named @name added successfully!', ['@name' => $form_state->getValue('cat_name')]));
   }
 }
