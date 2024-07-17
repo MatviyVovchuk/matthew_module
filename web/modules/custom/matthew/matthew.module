@@ -11,6 +11,7 @@ function matthew_theme($existing, $type, $theme, $path) {
     'cats' => [
       'variables' => [
         'content' => NULL,
+        'form' => [],
       ],
       'template' => 'cats',
       'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
