@@ -6,6 +6,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\MessageCommand;
 
 /**
  * Provides a form to add a cat's name.
@@ -66,29 +68,36 @@ class MatthewCatsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Add cat'),
       '#button_type' => 'primary',
+      '#ajax' => [
+        'callback' => '::validateForm',
+      ],
     ];
 
     return $form;
   }
 
   /**
-   * {@inheritdoc}
+   * AJAX callback to validate the cat name.
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): AjaxResponse {
+    $response = new AjaxResponse();
     $cat_name = $form_state->getValue('cat_name');
-    if (strlen($cat_name) < 2) {
-      $form_state->setErrorByName('cat_name', $this->t('The cat name must be at least 2 characters long.'));
+
+    if (mb_strlen($cat_name, 'UTF-8') < 2 || mb_strlen($cat_name, 'UTF-8') > 32) {
+      $response->addCommand(new MessageCommand($this->t('The name must be between 2 and 32 characters long.'), NULL, ['type' => 'error']));
     }
-    if (strlen($cat_name) > 32) {
-      $form_state->setErrorByName('cat_name', $this->t('The cat name must be at most 32 characters long.'));
+    else {
+      $response->addCommand(new MessageCommand($this->t('Cat named @name added successfully!', ['@name' => $cat_name])));
     }
+
+    return $response;
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // For now just display a message.
-    $this->messenger->addMessage($this->t('Cat named @name added successfully!', ['@name' => $form_state->getValue('cat_name')]));
+    // This function can be used to handle non-AJAX form submissions if needed.
   }
+
 }
