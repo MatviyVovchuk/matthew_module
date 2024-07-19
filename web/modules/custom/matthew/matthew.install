@@ -1,0 +1,57 @@
+<?php
+
+use Drupal\Core\Database\Database;
+use Drupal\Core\Database\SchemaObjectInterface;
+
+/**
+ * Implements hook_install().
+ */
+function matthew_install() {
+  // Define the schema for the table.
+  $schema = [
+    'description' => 'Table for storing cat information.',
+    'fields' => [
+      'id' => [
+        'description' => 'Primary Key: Unique cat ID.',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'cat_name' => [
+        'description' => 'Name of the cat.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ],
+      'user_email' => [
+        'description' => 'Email of the cat owner.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ],
+      'cats_image_id' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'File ID of the cat image.',
+      ],
+      'created' => [
+        'description' => 'Timestamp when the record was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['id'],
+  ];
+
+  // Create the table.
+  Database::getConnection()->schema()->createTable('matthew', $schema);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function matthew_uninstall() {
+  // Drop the table when the module is uninstalled.
+  Database::getConnection()->schema()->dropTable('matthew');
+}
