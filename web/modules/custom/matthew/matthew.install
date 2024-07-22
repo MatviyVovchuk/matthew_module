@@ -2,6 +2,7 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\SchemaObjectInterface;
+use Drupal\Core\File\FileSystemInterface;
 
 /**
  * Implements hook_install().
@@ -52,6 +53,15 @@ function matthew_install() {
  * Implements hook_uninstall().
  */
 function matthew_uninstall() {
+  // Remove all files in the 'public://cats' directory.
+  $file_system = \Drupal::service('file_system');
+  $directory = 'public://cats';
+
+  if (is_dir($file_system->realpath($directory))) {
+    // Delete the directory and all its contents.
+    $file_system->deleteRecursive($directory);
+  }
+
   // Drop the table when the module is uninstalled.
   Database::getConnection()->schema()->dropTable('matthew');
 }
