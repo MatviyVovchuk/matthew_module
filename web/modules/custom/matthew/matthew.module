@@ -16,5 +16,12 @@ function matthew_theme($existing, $type, $theme, $path) {
       'template' => 'cats',
       'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
     ],
+    'cats-view' => [
+      'variables' => [
+        'content' => NULL,
+      ],
+      'template' => 'cats-view',
+      'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
+    ],
   ];
 }
