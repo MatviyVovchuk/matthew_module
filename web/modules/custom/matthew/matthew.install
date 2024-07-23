@@ -3,6 +3,7 @@
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\SchemaObjectInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\file\Entity\File;
 
 /**
  * Implements hook_install().
@@ -53,6 +54,22 @@ function matthew_install() {
  * Implements hook_uninstall().
  */
 function matthew_uninstall() {
+  // Get all file IDs from the matthew table
+  $connection = Database::getConnection();
+  $file_ids = $connection->select('matthew', 'm')
+    ->fields('m', ['cats_image_id'])
+    ->execute()
+    ->fetchCol();
+
+  // Delete files
+  foreach ($file_ids as $fid) {
+    $file = File::load($fid);
+    if ($file) {
+      // Delete the file entity
+      $file->delete();
+    }
+  }
+
   // Remove all files in the 'public://cats' directory.
   $file_system = \Drupal::service('file_system');
   $directory = 'public://cats';
