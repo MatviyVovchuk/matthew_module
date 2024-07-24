@@ -105,6 +105,11 @@ class CatsController extends ControllerBase {
           'matthew/styles',
         ],
       ],
+      '#cache' => [
+        'tags' => ['view'],
+        'contexts' => ['user'],
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -115,26 +120,21 @@ class CatsController extends ControllerBase {
    *   The ID of the cat record.
    */
   public function editCat($id) {
-    // Your logic for editing a cat record goes here.
+    // For now just a message.
     return [
       '#markup' => $this->t('Edit cat record with ID @id', ['@id' => $id]),
     ];
   }
 
   /**
-   * Delete a cat record.
+   * Redirect to the delete confirmation form.
    *
    * @param int $id
    *   The ID of the cat record.
    */
   public function deleteCat($id) {
-    // Delete the record from the database.
-    Database::getConnection()->delete('matthew')
-      ->condition('id', $id)
-      ->execute();
-
-    // Redirect to the latest cats page.
-    $url = Url::fromRoute('matthew.view')->toString();
-    return new TrustedRedirectResponse($url);
+    // Redirect to the confirmation form.
+    $url = Url::fromRoute('matthew.delete_cat_confirm', ['id' => $id])->toString();
+    return new RedirectResponse($url);
   }
 }
