@@ -29,3 +29,11 @@ matthew.delete_cat:
     _title: 'Delete cat record'
   requirements:
     _permission: 'administer site configuration'
+
+matthew.cats_list:
+  path: '/admin/structure/cats-list'
+  defaults:
+    _controller: '\Drupal\matthew\Controller\CatsController::list'
+    _title: 'Cats list'
+  requirements:
+    _permission: 'administer site configuration'

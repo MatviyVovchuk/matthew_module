@@ -10,6 +10,7 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Link;
 
 /**
  * Controller for the Cats page.
@@ -145,5 +146,79 @@ class CatsController extends ControllerBase {
 
     // Return the form.
     return $form;
+  }
+
+  /**
+   * Display a list of cats.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function list() {
+    // Define the table headers.
+    $header = [
+      ['data' => $this->t('Name'), 'field' => 'cat_name'],
+      ['data' => $this->t('Email'), 'field' => 'user_email'],
+      ['data' => $this->t('Date Added'), 'field' => 'created'],
+      ['data' => $this->t('Image')],
+      ['data' => $this->t('Operations')],
+    ];
+
+    // Get the database connection.
+    $connection = Database::getConnection();
+
+    // Build the query.
+    $query = $connection->select('matthew', 'm')
+      ->fields('m', ['id', 'cat_name', 'user_email', 'created', 'cats_image_id'])
+      ->orderBy('created', 'DESC');
+
+    // Execute the query.
+    $results = $query->execute()->fetchAll();
+
+    $rows = [];
+    $file_url_generator = \Drupal::service('file_url_generator');
+    $date_formatter = \Drupal::service('date.formatter');
+
+    foreach ($results as $row) {
+      $image_url = '';
+      if ($row->cats_image_id) {
+        $file = File::load($row->cats_image_id);
+        if ($file) {
+          $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
+        }
+      }
+
+      $edit_link = Link::fromTextAndUrl($this->t('Edit'), Url::fromRoute('matthew.edit_cat', ['id' => $row->id]))->toString();
+      $delete_link = Link::fromTextAndUrl($this->t('Delete'), Url::fromRoute('matthew.delete_cat', ['id' => $row->id]))->toString();
+
+      $rows[] = [
+        'cat_name' => $row->cat_name,
+        'user_email' => $row->user_email,
+        'created' => $date_formatter->format($row->created, 'custom', 'd/m/Y H:i:s'),
+        'image' => $image_url ? ['data' => ['#theme' => 'image', '#uri' => $image_url, '#width' => 100, '#height' => 100]] : $this->t('No image'),
+        'operations' => [
+          'data' => [
+            '#type' => 'operations',
+            '#links' => [
+              'edit' => [
+                'title' => $this->t('Edit'),
+                'url' => Url::fromRoute('matthew.edit_cat', ['id' => $row->id]),
+              ],
+              'delete' => [
+                'title' => $this->t('Delete'),
+                'url' => Url::fromRoute('matthew.delete_cat', ['id' => $row->id]),
+              ],
+            ],
+          ],
+        ],
+      ];
+    }
+
+    return [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#empty' => $this->t('No cats found.'),
+    ];
   }
 }

@@ -1,0 +1,6 @@
+matthew.admin_cats_list:
+  title: 'Cats list'
+  description: 'List of all cats'
+  parent: system.admin_structure
+  route_name: matthew.cats_list
+  weight: 100
