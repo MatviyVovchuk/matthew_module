@@ -1,3 +1,5 @@
+{# modules/custom/matthew/templates/cats-view.html.twig #}
+
 <div class="cats-container">
   {% for row in rows %}
     <div class="cat-entry">
@@ -5,8 +7,13 @@
         <h2 class="cat-name">{{ row.cat_name }}</h2>
         <p class="user-email">{{ 'User\'s e-mail'|t }}: <a href="mailto:{{ row.user_email }}">{{ row.user_email }}</a></p>
         <p class="date-added">{{ 'Date added'|t }}: {{ row.created }}</p>
+        {% if is_admin %}
+          <div class="admin-buttons">
+            <a href="{{ row.edit_url }}" class="button button--action button--primary edit-button">{{ 'Edit'|t }}</a>
+            <a href="{{ row.delete_url }}" class="button button--action button--danger delete-button">{{ 'Delete'|t }}</a>
+          </div>
+        {% endif %}
       </div>
-
       {% if row.image %}
         <div class="cat-image-container">
           <a href="{{ row.image.data['#uri'] }}" class="cat-image-link" target="_blank">

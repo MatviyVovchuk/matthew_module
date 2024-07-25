@@ -5,8 +5,11 @@ namespace Drupal\matthew\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Controller for the Cats page.
@@ -62,7 +65,7 @@ class CatsController extends ControllerBase {
    */
   public function latestCatsPage() {
     $query = Database::getConnection()->select('matthew', 'm')
-      ->fields('m', ['cat_name', 'user_email', 'cats_image_id', 'created'])
+      ->fields('m', ['id', 'cat_name', 'user_email', 'cats_image_id', 'created'])
       ->orderBy('created', 'DESC')
       ->execute();
 
@@ -75,6 +78,7 @@ class CatsController extends ControllerBase {
       $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
 
       $rows[] = [
+        'id' => $record->id,
         'cat_name' => $record->cat_name,
         'user_email' => $record->user_email,
         'image' => $image_url ? [
@@ -85,17 +89,52 @@ class CatsController extends ControllerBase {
           ],
         ] : '',
         'created' => $date_formatter->format($record->created, 'custom', 'd/m/Y H:i:s'),
+        'edit_url' => Url::fromRoute('matthew.edit_cat', ['id' => $record->id])->toString(),
+        'delete_url' => Url::fromRoute('matthew.delete_cat', ['id' => $record->id])->toString(),
       ];
     }
+
+    $is_admin = $this->currentUser()->hasPermission('administer site configuration');
 
     return [
       '#theme' => 'cats-view',
       '#rows' => $rows,
+      '#is_admin' => $is_admin,
       '#attached' => [
         'library' => [
           'matthew/styles',
         ],
       ],
     ];
+  }
+
+  /**
+   * Edit a cat record.
+   *
+   * @param int $id
+   *   The ID of the cat record.
+   */
+  public function editCat($id) {
+    // Your logic for editing a cat record goes here.
+    return [
+      '#markup' => $this->t('Edit cat record with ID @id', ['@id' => $id]),
+    ];
+  }
+
+  /**
+   * Delete a cat record.
+   *
+   * @param int $id
+   *   The ID of the cat record.
+   */
+  public function deleteCat($id) {
+    // Delete the record from the database.
+    Database::getConnection()->delete('matthew')
+      ->condition('id', $id)
+      ->execute();
+
+    // Redirect to the latest cats page.
+    $url = Url::fromRoute('matthew.view')->toString();
+    return new TrustedRedirectResponse($url);
   }
 }

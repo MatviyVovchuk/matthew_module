@@ -13,3 +13,19 @@ matthew.view:
     _title: 'Cats Page'
   requirements:
     _permission: 'access content'
+
+matthew.edit_cat:
+  path: '/matthew/cat/{id}/edit'
+  defaults:
+    _controller: '\Drupal\matthew\Controller\CatsController::editCat'
+    _title: 'Edit Cat'
+  requirements:
+    _permission: 'administer site configuration'
+
+matthew.delete_cat:
+  path: '/matthew/cat/{id}/delete'
+  defaults:
+    _controller: '\Drupal\matthew\Controller\CatsController::deleteCat'
+    _title: 'Delete Cat'
+  requirements:
+    _permission: 'administer site configuration'
