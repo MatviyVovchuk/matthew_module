@@ -1,0 +1,53 @@
+/* css/cat-view.css */
+
+.cats-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.cat-entry {
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+.cat-info {
+  flex: 1;
+  min-width: 200px;
+}
+.cat-image-container {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  margin-left: 20px;
+  border: 5px solid #ccc;
+  border-radius: 8px;
+}
+.user-email a {
+  text-decoration: none;
+  color: #000000;
+}
+.cat-name {
+  font-weight: 600;
+}
+.cat-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cat-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.no-records,
+.no-image {
+  text-align: center;
+  font-size: 1.2em;
+  color: #999;
+}

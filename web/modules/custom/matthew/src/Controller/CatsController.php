@@ -67,9 +67,12 @@ class CatsController extends ControllerBase {
       ->execute();
 
     $rows = [];
+    $file_url_generator = \Drupal::service('file_url_generator');
+    $date_formatter = \Drupal::service('date.formatter');
+
     foreach ($query as $record) {
       $file = File::load($record->cats_image_id);
-      $image_url = $file ? file_create_url($file->getFileUri()) : '';
+      $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
 
       $rows[] = [
         'cat_name' => $record->cat_name,
@@ -81,22 +84,18 @@ class CatsController extends ControllerBase {
             '#alt' => $this->t('Cat image'),
           ],
         ] : '',
-        'created' => date('Y-m-d H:i:s', $record->created),
+        'created' => $date_formatter->format($record->created, 'custom', 'd/m/Y H:i:s'),
       ];
     }
 
-    $header = [
-      $this->t('Cat Name'),
-      $this->t('User Email'),
-      $this->t('Image'),
-      $this->t('Date Added'),
-    ];
-
     return [
-      '#type' => 'table',
-      '#header' => $header,
+      '#theme' => 'cats-view',
       '#rows' => $rows,
-      '#empty' => $this->t('No cats found.'),
+      '#attached' => [
+        'library' => [
+          'matthew/styles',
+        ],
+      ],
     ];
   }
 }

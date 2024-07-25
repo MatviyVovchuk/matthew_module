@@ -19,9 +19,20 @@ function matthew_theme($existing, $type, $theme, $path) {
     'cats-view' => [
       'variables' => [
         'content' => NULL,
+        'rows' => []
       ],
       'template' => 'cats-view',
       'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
     ],
   ];
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function matthew_page_attachments(array &$attachments) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name == 'matthew.view') {
+    $attachments['#attached']['library'][] = 'matthew/cat-view-styles';
+  }
 }

@@ -1,0 +1,23 @@
+<div class="cats-container">
+  {% for row in rows %}
+    <div class="cat-entry">
+      <div class="cat-info">
+        <h2 class="cat-name">{{ row.cat_name }}</h2>
+        <p class="user-email">{{ 'User\'s e-mail'|t }}: <a href="mailto:{{ row.user_email }}">{{ row.user_email }}</a></p>
+        <p class="date-added">{{ 'Date added'|t }}: {{ row.created }}</p>
+      </div>
+
+      {% if row.image %}
+        <div class="cat-image-container">
+          <a href="{{ row.image.data['#uri'] }}" class="cat-image-link" target="_blank">
+            <img src="{{ row.image.data['#uri'] }}" alt="{{ 'Cat image'|t }}" class="cat-image">
+          </a>
+        </div>
+      {% else %}
+        <div class="no-image">{{ 'No image available'|t }}</div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="no-records">{{ 'No cats found.'|t }}</div>
+  {% endfor %}
+</div>
