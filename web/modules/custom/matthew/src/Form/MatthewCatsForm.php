@@ -9,6 +9,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Ajax\CssCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\file\Entity\File;
 
 /**
  * Provides a form to add a cat's name and email.
@@ -80,13 +82,28 @@ class MatthewCatsForm extends FormBase {
       ],
     ];
 
+    $form['image'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload an image of your cat:'),
+      '#description' => $this->t('Allowed formats: jpeg, jpg, png. Maximum file size: 2 MB.'),
+      '#required' => TRUE,
+      '#upload_validators' => [
+        'file_validate_extensions' => ['jpeg jpg png'],
+        'file_validate_size' => [2097152], // 2 MB in bytes.
+      ],
+      '#ajax' => [
+        'callback' => '::validateImage',
+        'event' => 'change',
+      ],
+    ];
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add cat'),
       '#button_type' => 'primary',
       '#ajax' => [
-        'callback' => '::validateForm',
+        'callback' => '::submitAjaxForm',
       ],
     ];
 
@@ -139,12 +156,41 @@ class MatthewCatsForm extends FormBase {
   }
 
   /**
-   * AJAX callback to validate the entire form upon submission.
+   * AJAX callback to validate the image.
+   */
+  public function validateImage(array &$form, FormStateInterface $form_state): AjaxResponse {
+    $response = new AjaxResponse();
+    $image_fid = $form_state->getValue('image')[0];
+
+    if ($image_fid) {
+      $file = File::load($image_fid);
+      $file_extension = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
+      $allowed_extensions = ['jpeg', 'jpg', 'png'];
+      $file_size = $file->getSize();
+
+      if (!in_array($file_extension, $allowed_extensions)) {
+        $this->addValidationResponse($response, 'Invalid file type. Allowed formats: jpeg, jpg, png.', '#edit-image', FALSE);
+      } elseif ($file_size > 2097152) {
+        $this->addValidationResponse($response, 'The file size exceeds 2 MB.', '#edit-image', FALSE);
+      } else {
+        $this->addValidationResponse($response, 'The image is valid.', '#edit-image', TRUE);
+      }
+    } else {
+      $this->addValidationResponse($response, 'The image is required.', '#edit-image', FALSE);
+    }
+
+    return $response;
+  }
+
+  /**
+   * AJAX callback to validate the form before submission.
    */
   public function validateForm(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
+
     $cat_name = $form_state->getValue('cat_name');
     $email = $form_state->getValue('email');
+    $image_fid = $form_state->getValue('image')[0];
     $email_pattern = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
     $valid = TRUE;
 
@@ -153,9 +199,6 @@ class MatthewCatsForm extends FormBase {
       $valid = FALSE;
     } elseif (mb_strlen($cat_name, 'UTF-8') < 2 || mb_strlen($cat_name, 'UTF-8') > 32) {
       $this->addValidationResponse($response, 'The name must be between 2 and 32 characters long.', '#edit-cat-name', FALSE);
-      $valid = FALSE;
-    } else {
-      $this->addValidationResponse($response, 'The name is valid.', '#edit-cat-name', TRUE);
     }
 
     if (trim($email) === '') {
@@ -163,14 +206,56 @@ class MatthewCatsForm extends FormBase {
       $valid = FALSE;
     } elseif (!preg_match($email_pattern, $email)) {
       $this->addValidationResponse($response, 'The email is not valid.', '#edit-email', FALSE);
-      $valid = FALSE;
-    } else {
-      $this->addValidationResponse($response, 'The email is valid.', '#edit-email', TRUE);
     }
 
-    if ($valid) {
-      $response->addCommand(new MessageCommand($this->t('The form is valid and has been submitted.'), NULL));
+    if (empty($image_fid)) {
+      $this->addValidationResponse($response, 'The image is required.', '#edit-image', FALSE);
+    } else {
+      $file = File::load($image_fid);
+      $file_extension = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
+      $allowed_extensions = ['jpeg', 'jpg', 'png'];
+      $file_size = $file->getSize();
+
+      if (!in_array($file_extension, $allowed_extensions)) {
+        $this->addValidationResponse($response, 'Invalid file type. Allowed formats: jpeg, jpg, png.', '#edit-image', FALSE);
+        $valid = FALSE;
+      } elseif ($file_size > 2097152) {
+        $this->addValidationResponse($response, 'The file size exceeds 2 MB.', '#edit-image', FALSE);
+        $valid = FALSE;
+      } else {
+        $this->addValidationResponse($response, 'The image is valid.', '#edit-image', TRUE);
+      }
     }
+
+    return $response;
+  }
+
+  /**
+   * AJAX submit callback for the form.
+   */
+  public function submitAjaxForm(array &$form, FormStateInterface $form_state): AjaxResponse {
+    $response = new AjaxResponse();
+
+    $this->validateForm($form, $form_state);
+
+    if ($form_state->hasAnyErrors()) {
+      return $response;
+    }
+
+    $cat_name = $form_state->getValue('cat_name');
+    $email = $form_state->getValue('email');
+    $image_fid = $form_state->getValue('image')[0];
+    $file = File::load($image_fid);
+
+    if ($file) {
+      $file->setPermanent();
+      $file->save();
+    }
+
+    $response->addCommand(new MessageCommand($this->t('Your cat %cat_name has been added with your email %email and the image is uploaded successfully.', [
+      '%cat_name' => $cat_name,
+      '%email' => $email,
+    ]), NULL, ['type' => 'status']));
 
     return $response;
   }
@@ -179,8 +264,7 @@ class MatthewCatsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // For now just display a message.
-    $this->messenger->addMessage($this->t('Cat named @name with email @mail added successfully!', ['@name' => $form_state->getValue('cat_name'), '@mail' => $form_state->getValue('email')]));
+    // This function can be left empty as we are handling submission via AJAX.
   }
 
 }
