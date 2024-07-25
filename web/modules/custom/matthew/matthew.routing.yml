@@ -2,6 +2,14 @@ matthew.cats:
   path: '/matthew/cats'
   defaults:
     _controller: '\Drupal\matthew\Controller\CatsController::content'
+    _title: 'Cats Form'
+  requirements:
+    _permission: 'access content'
+
+matthew.view:
+  path: '/matthew/cats-view'
+  defaults:
+    _controller: '\Drupal\matthew\Controller\CatsController::latestCatsPage'
     _title: 'Cats Page'
   requirements:
     _permission: 'access content'

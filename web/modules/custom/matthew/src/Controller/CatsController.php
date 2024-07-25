@@ -3,7 +3,9 @@
 namespace Drupal\matthew\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\file\Entity\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -52,6 +54,49 @@ class CatsController extends ControllerBase {
         'title' => $this->t('Hello! You can add here a photo of your cat.'),
         'form' => $form,
       ],
+    ];
+  }
+
+  /**
+   * Returns a page with the latest cat records.
+   */
+  public function latestCatsPage() {
+    $query = Database::getConnection()->select('matthew', 'm')
+      ->fields('m', ['cat_name', 'user_email', 'cats_image_id', 'created'])
+      ->orderBy('created', 'DESC')
+      ->execute();
+
+    $rows = [];
+    foreach ($query as $record) {
+      $file = File::load($record->cats_image_id);
+      $image_url = $file ? file_create_url($file->getFileUri()) : '';
+
+      $rows[] = [
+        'cat_name' => $record->cat_name,
+        'user_email' => $record->user_email,
+        'image' => $image_url ? [
+          'data' => [
+            '#theme' => 'image',
+            '#uri' => $image_url,
+            '#alt' => $this->t('Cat image'),
+          ],
+        ] : '',
+        'created' => date('Y-m-d H:i:s', $record->created),
+      ];
+    }
+
+    $header = [
+      $this->t('Cat Name'),
+      $this->t('User Email'),
+      $this->t('Image'),
+      $this->t('Date Added'),
+    ];
+
+    return [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#empty' => $this->t('No cats found.'),
     ];
   }
 }
