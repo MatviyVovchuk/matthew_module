@@ -7,7 +7,7 @@ dependencies:
 id: matthew_pagetitle
 theme: matthew
 region: header
-weight: 0
+weight: -7
 provider: null
 plugin: page_title_block
 settings:
