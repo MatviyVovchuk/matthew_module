@@ -65,53 +65,14 @@ class CatsController extends ControllerBase {
    * Returns a page with the latest cat records.
    */
   public function latestCatsPage() {
-    $query = Database::getConnection()->select('matthew', 'm')
-      ->fields('m', ['id', 'cat_name', 'user_email', 'cats_image_id', 'created'])
-      ->orderBy('created', 'DESC')
-      ->execute();
+    // Get the form builder service.
+    $form_builder = \Drupal::service('form_builder');
 
-    $rows = [];
-    $file_url_generator = \Drupal::service('file_url_generator');
-    $date_formatter = \Drupal::service('date.formatter');
+    // Build the cats view form.
+    $form = $form_builder->getForm('\Drupal\matthew\Form\CatsViewForm');
 
-    foreach ($query as $record) {
-      $file = File::load($record->cats_image_id);
-      $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
-
-      $rows[] = [
-        'id' => $record->id,
-        'cat_name' => $record->cat_name,
-        'user_email' => $record->user_email,
-        'image' => $image_url ? [
-          'data' => [
-            '#theme' => 'image',
-            '#uri' => $image_url,
-            '#alt' => $this->t('Cat image'),
-          ],
-        ] : '',
-        'created' => $date_formatter->format($record->created, 'custom', 'd/m/Y H:i:s'),
-        'edit_url' => Url::fromRoute('matthew.edit_cat', ['id' => $record->id])->toString(),
-        'delete_url' => Url::fromRoute('matthew.delete_cat', ['id' => $record->id])->toString(),
-      ];
-    }
-
-    $is_admin = $this->currentUser()->hasPermission('administer site configuration');
-
-    return [
-      '#theme' => 'cats-view',
-      '#rows' => $rows,
-      '#is_admin' => $is_admin,
-      '#attached' => [
-        'library' => [
-          'matthew/styles',
-        ],
-      ],
-      '#cache' => [
-        'tags' => ['view'],
-        'contexts' => ['user'],
-        'max-age' => 0,
-      ],
-    ];
+    // Return the form.
+    return $form;
   }
 
   /**
@@ -142,7 +103,24 @@ class CatsController extends ControllerBase {
     $form_builder = \Drupal::service('form_builder');
 
     // Build the confirmation form.
-    $form = $form_builder->getForm('\Drupal\matthew\Form\DeleteCatForm', $id);
+    $form = $form_builder->getForm('\Drupal\matthew\Form\ConfirmDeleteCatForm', $id);
+
+    // Return the form.
+    return $form;
+  }
+
+  /**
+   * Returns a form for delete bulk confirmation a cat record.
+   *
+   * @param array $ids
+   *   The IDs of the cats record.
+   */
+  public function deleteBulkCats($ids) {
+    // Get the form builder service.
+    $form_builder = \Drupal::service('form_builder');
+
+    // Build the confirmation form.
+    $form = $form_builder->getForm('\Drupal\matthew\Form\ConfirmBulkDeleteForm', $ids);
 
     // Return the form.
     return $form;
@@ -155,70 +133,13 @@ class CatsController extends ControllerBase {
    *   A render array.
    */
   public function list() {
-    // Define the table headers.
-    $header = [
-      ['data' => $this->t('Name'), 'field' => 'cat_name'],
-      ['data' => $this->t('Email'), 'field' => 'user_email'],
-      ['data' => $this->t('Date Added'), 'field' => 'created'],
-      ['data' => $this->t('Image')],
-      ['data' => $this->t('Operations')],
-    ];
+    // Get the form builder service.
+    $form_builder = \Drupal::service('form_builder');
 
-    // Get the database connection.
-    $connection = Database::getConnection();
+    // Build the cats list form.
+    $form = $form_builder->getForm('\Drupal\matthew\Form\CatsListForm');
 
-    // Build the query.
-    $query = $connection->select('matthew', 'm')
-      ->fields('m', ['id', 'cat_name', 'user_email', 'created', 'cats_image_id'])
-      ->orderBy('created', 'DESC');
-
-    // Execute the query.
-    $results = $query->execute()->fetchAll();
-
-    $rows = [];
-    $file_url_generator = \Drupal::service('file_url_generator');
-    $date_formatter = \Drupal::service('date.formatter');
-
-    foreach ($results as $row) {
-      $image_url = '';
-      if ($row->cats_image_id) {
-        $file = File::load($row->cats_image_id);
-        if ($file) {
-          $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
-        }
-      }
-
-      $edit_link = Link::fromTextAndUrl($this->t('Edit'), Url::fromRoute('matthew.edit_cat', ['id' => $row->id]))->toString();
-      $delete_link = Link::fromTextAndUrl($this->t('Delete'), Url::fromRoute('matthew.delete_cat', ['id' => $row->id]))->toString();
-
-      $rows[] = [
-        'cat_name' => $row->cat_name,
-        'user_email' => $row->user_email,
-        'created' => $date_formatter->format($row->created, 'custom', 'd/m/Y H:i:s'),
-        'image' => $image_url ? ['data' => ['#theme' => 'image', '#uri' => $image_url, '#width' => 100, '#height' => 100]] : $this->t('No image'),
-        'operations' => [
-          'data' => [
-            '#type' => 'operations',
-            '#links' => [
-              'edit' => [
-                'title' => $this->t('Edit'),
-                'url' => Url::fromRoute('matthew.edit_cat', ['id' => $row->id]),
-              ],
-              'delete' => [
-                'title' => $this->t('Delete'),
-                'url' => Url::fromRoute('matthew.delete_cat', ['id' => $row->id]),
-              ],
-            ],
-          ],
-        ],
-      ];
-    }
-
-    return [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => $this->t('No cats found.'),
-    ];
+    // Return the form.
+    return $form;
   }
 }

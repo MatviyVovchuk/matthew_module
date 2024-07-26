@@ -30,6 +30,15 @@ matthew.delete_cat:
   requirements:
     _permission: 'administer site configuration'
 
+matthew.delete_cat_bulk:
+  path: '/admin/structure/cats-list/confirm-delete-bulk/{ids}'
+  defaults:
+    _controller: '\Drupal\matthew\Controller\CatsController::deleteBulkCats'
+#    _form: '\Drupal\matthew\Form\ConfirmBulkDeleteForm'
+    _title: 'Confirm deletion'
+  requirements:
+    _permission: 'administer site configuration'
+
 matthew.cats_list:
   path: '/admin/structure/cats-list'
   defaults:
