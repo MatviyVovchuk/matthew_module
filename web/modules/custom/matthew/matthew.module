@@ -1,12 +1,15 @@
 <?php
 
-use Drupal\Core\Render\Element;
-
 /**
  * Implements hook_theme().
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ * @return array
  */
-function matthew_theme($existing, $type, $theme, $path) {
-  $extensionPathResolver = \Drupal::service('extension.path.resolver');
+function matthew_theme($existing, $type, $theme, $path): array {
+  $extensionPathResolver = Drupal::service('extension.path.resolver');
   return [
     'cats' => [
       'variables' => [
@@ -29,9 +32,11 @@ function matthew_theme($existing, $type, $theme, $path) {
 
 /**
  * Implements hook_page_attachments().
+ * @param array $attachments
  */
-function matthew_page_attachments(array &$attachments) {
-  $route_name = \Drupal::routeMatch()->getRouteName();
+function matthew_page_attachments(array &$attachments): void
+{
+  $route_name = Drupal::routeMatch()->getRouteName();
   if ($route_name == 'matthew.view') {
     $attachments['#attached']['library'][] = 'matthew/cat-view-styles';
   }

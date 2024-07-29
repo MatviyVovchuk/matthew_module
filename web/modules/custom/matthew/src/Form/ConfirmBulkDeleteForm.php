@@ -2,37 +2,77 @@
 
 namespace Drupal\matthew\Form;
 
-use Drupal\Core\Form\FormBase;
+use Drupal;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Database\Database;
 use Drupal\file\Entity\File;
+use Drupal\Core\Messenger\MessengerTrait;
 
 /**
  * Class ConfirmBulkDeleteForm.
  *
  * Provides a form for confirming the bulk deletion of cat records.
  */
-class ConfirmBulkDeleteForm extends FormBase {
+class ConfirmBulkDeleteForm extends ConfirmFormBase {
+
+  use MessengerTrait;
 
   /**
    * The IDs of the cats to be deleted.
    *
    * @var array
    */
-  protected $ids;
+  protected array $ids;
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'matthew_confirm_delete_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $ids = NULL) {
+  public function getQuestion(): string {
+    return $this->t('Are you sure you want to delete the selected cats?');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelUrl(): Url {
+    return new Url('matthew.cats_list');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription(): string {
+    return $this->t('This action cannot be undone.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfirmText(): string {
+    return $this->t('Delete');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelText(): string {
+    return $this->t('Cancel');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, $ids = NULL): array {
     // Store the IDs of the cats to be deleted.
     $this->ids = !empty($ids) ? explode(',', $ids) : [];
 
@@ -46,13 +86,19 @@ class ConfirmBulkDeleteForm extends FormBase {
 
     // Prepare table rows with cat records.
     $rows = [];
-    $file_url_generator = \Drupal::service('file_url_generator');
-    $date_formatter = \Drupal::service('date.formatter');
+    // Get the file URL generator service.
+    $file_url_generator = Drupal::service('file_url_generator');
+    // Get the date formatter service.
+    $date_formatter = Drupal::service('date.formatter');
 
+    // Iterate through the query results to build the table rows.
     foreach ($results as $record) {
+      // Load the file entity for the cat image.
       $file = File::load($record->cats_image_id);
+      // Generate the absolute URL for the cat image.
       $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
 
+      // Build the row data.
       $rows[] = [
         'id' => $record->id,
         'cat_name' => $record->cat_name,
@@ -89,18 +135,28 @@ class ConfirmBulkDeleteForm extends FormBase {
       '#empty' => $this->t('No cats selected for deletion.'),
     ];
 
-    // Add action buttons.
-    $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Delete'),
-      '#attributes' => ['class' => ['button', 'delete-button']], // Set the desired classes here
+    // Add description and question to the form.
+    $form['description'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . $this->getDescription() . '</p>',
+    ];
+    $form['question'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . $this->getQuestion() . '</p>',
     ];
 
+    // Add action buttons.
+    $form['actions'] = [
+      '#type' => 'actions',
+    ];
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->getConfirmText(),
+    ];
     $form['actions']['cancel'] = [
       '#type' => 'link',
-      '#title' => $this->t('Cancel'),
-      '#url' => Url::fromRoute('matthew.cats_list'),
+      '#title' => $this->getCancelText(),
+      '#url' => $this->getCancelUrl(),
       '#attributes' => ['class' => ['button']],
     ];
 
@@ -109,8 +165,10 @@ class ConfirmBulkDeleteForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws EntityStorageException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    // Get the database connection.
     $connection = Database::getConnection();
 
     // Get image IDs before deleting records.
@@ -128,14 +186,15 @@ class ConfirmBulkDeleteForm extends FormBase {
     foreach ($image_ids as $fid) {
       if ($fid) {
         $file = File::load($fid);
-        if ($file) {
-          $file->delete();
-        }
+        $file?->delete();
       }
     }
 
     // Display a status message and redirect to the cats list.
-    $this->messenger()->addStatus($this->t('@count cats and their associated images have been deleted.', ['@count' => count($this->ids)]));
-    $form_state->setRedirect('matthew.cats_list');
+    $this->messenger()->addStatus($this->t('@count cats and their associated images have been deleted.',
+      ['@count' => count($this->ids)]
+    ));
+    $form_state->setRedirectUrl($this->getCancelUrl());
   }
+
 }

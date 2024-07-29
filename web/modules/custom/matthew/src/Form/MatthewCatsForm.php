@@ -2,17 +2,17 @@
 
 namespace Drupal\matthew\Form;
 
+use Drupal;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CssCommand;
-use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\file\Entity\File;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Exception;
 
 /**
  * Provides a form to add a cat's name and email.
@@ -25,43 +25,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class MatthewCatsForm extends FormBase {
 
   /**
-   * The messenger service.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
-   * Constructs a new object.
-   *
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
-   */
-  public function __construct(MessengerInterface $messenger) {
-    $this->messenger = $messenger;
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('messenger')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'matthew_cats_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $form['#id'] = $this->getFormId();
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    // Add form fields.
     $form['cat_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Your cat’s name:'),
@@ -116,25 +90,47 @@ class MatthewCatsForm extends FormBase {
 
   /**
    * Validates the input and adds AJAX commands to the response.
+   * @param AjaxResponse $response
+   * @param string $message
+   * @param string $selector
+   * @param bool $is_valid
    */
-  protected function addValidationResponse(AjaxResponse $response, string $message, string $selector, bool $is_valid): void {
-    $response->addCommand(new MessageCommand($this->t($message), NULL, ['type' => $is_valid ? 'status' : 'error']));
-    $response->addCommand(new CssCommand($selector, ['border' => $is_valid ? '1px solid green' : '1px solid red']));
+  protected function addValidationResponse(AjaxResponse $response,
+                                           string       $message,
+                                           string       $selector,
+                                           bool         $is_valid): void {
+    $response->addCommand(new MessageCommand($this->t($message),
+      NULL,
+      ['type' => $is_valid ? 'status' : 'error']));
+    $response->addCommand(new CssCommand($selector,
+      ['border' => $is_valid ? '1px solid green' : '1px solid red']));
   }
 
   /**
    * AJAX callback to validate the cat name.
+   * @param array $form
+   * @param FormStateInterface $form_state
+   * @return AjaxResponse
    */
-  public function validateCatName(array &$form, FormStateInterface $form_state) {
+  public function validateCatName(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
     $cat_name = $form_state->getValue('cat_name');
 
     if (empty($cat_name)) {
-      $this->addValidationResponse($response, 'The name is required.', '#edit-cat-name', FALSE);
+      $this->addValidationResponse($response,
+        'The name is required.',
+        '#edit-cat-name',
+        FALSE);
     } elseif (mb_strlen($cat_name, 'UTF-8') < 2 || mb_strlen($cat_name, 'UTF-8') > 32) {
-      $this->addValidationResponse($response, 'The name must be between 2 and 32 characters long.', '#edit-cat-name', FALSE);
+      $this->addValidationResponse($response,
+        'The name must be between 2 and 32 characters long.',
+        '#edit-cat-name',
+        FALSE);
     } else {
-      $this->addValidationResponse($response, 'The name is valid.', '#edit-cat-name', TRUE);
+      $this->addValidationResponse($response,
+        'The name is valid.',
+        '#edit-cat-name',
+        TRUE);
     }
 
     return $response;
@@ -142,6 +138,9 @@ class MatthewCatsForm extends FormBase {
 
   /**
    * AJAX callback to validate the email.
+   * @param array $form
+   * @param FormStateInterface $form_state
+   * @return AjaxResponse
    */
   public function validateEmail(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
@@ -161,6 +160,9 @@ class MatthewCatsForm extends FormBase {
 
   /**
    * AJAX callback to validate the image.
+   * @param array $form
+   * @param FormStateInterface $form_state
+   * @return AjaxResponse
    */
   public function validateImage(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
@@ -173,14 +175,26 @@ class MatthewCatsForm extends FormBase {
       $file_size = $file->getSize();
 
       if (!in_array($file_extension, $allowed_extensions)) {
-        $this->addValidationResponse($response, 'Invalid file type. Allowed formats: jpeg, jpg, png.', '#edit-image', FALSE);
+        $this->addValidationResponse($response,
+          'Invalid file type. Allowed formats: jpeg, jpg, png.',
+          '#edit-image',
+          FALSE);
       } elseif ($file_size > 2097152) {
-        $this->addValidationResponse($response, 'The file size exceeds 2 MB.', '#edit-image', FALSE);
+        $this->addValidationResponse($response,
+          'The file size exceeds 2 MB.',
+          '#edit-image',
+          FALSE);
       } else {
-        $this->addValidationResponse($response, 'The image is valid.', '#edit-image', TRUE);
+        $this->addValidationResponse($response,
+          'The image is valid.',
+          '#edit-image',
+          TRUE);
       }
     } else {
-      $this->addValidationResponse($response, 'The image is required.', '#edit-image', FALSE);
+      $this->addValidationResponse($response,
+        'The image is required.',
+        '#edit-image',
+        FALSE);
     }
 
     return $response;
@@ -188,6 +202,9 @@ class MatthewCatsForm extends FormBase {
 
   /**
    * AJAX callback to validate the form before submission.
+   * @param array $form
+   * @param FormStateInterface $form_state
+   * @return AjaxResponse
    */
   public function validateForm(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
@@ -218,9 +235,15 @@ class MatthewCatsForm extends FormBase {
       $file_size = $file->getSize();
 
       if (!in_array($file_extension, $allowed_extensions)) {
-        $this->addValidationResponse($response, 'Invalid file type. Allowed formats: jpeg, jpg, png.', '#edit-image', FALSE);
+        $this->addValidationResponse($response,
+          'Invalid file type. Allowed formats: jpeg, jpg, png.',
+          '#edit-image',
+          FALSE);
       } elseif ($file_size > 2097152) {
-        $this->addValidationResponse($response, 'The file size exceeds 2 MB.', '#edit-image', FALSE);
+        $this->addValidationResponse($response,
+          'The file size exceeds 2 MB.',
+          '#edit-image',
+          FALSE);
       }
     }
 
@@ -228,20 +251,19 @@ class MatthewCatsForm extends FormBase {
   }
 
   /**
-   * Checks if the form has any errors.
-   */
-  protected function hasAnyErrors(FormStateInterface $form_state): bool {
-    return count($form_state->getErrors()) > 0;
-  }
-
-  /**
    * AJAX submit callback for the form.
+   * @param array $form
+   * @param FormStateInterface $form_state
+   * @return AjaxResponse
+   *
+   * @throws EntityStorageException
+   * @throws Exception
    */
   public function submitAjaxForm(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
 
     $this->validateForm($form, $form_state);
-    if ($this->hasAnyErrors($form_state)) {
+    if (count($form_state->getErrors()) > 0) {
       foreach ($form_state->getErrors() as $error) {
         $response->addCommand(new MessageCommand($error, NULL, ['type' => 'error']));
       }
@@ -271,10 +293,13 @@ class MatthewCatsForm extends FormBase {
       ->execute();
 
     // Display success message
-    $response->addCommand(new MessageCommand($this->t('Your cat %cat_name has been added with your email %email and the image is uploaded successfully.', [
-      '%cat_name' => $cat_name,
-      '%email' => $email,
-    ]), NULL, ['type' => 'status']));
+    $response->addCommand(new MessageCommand(
+      $this->t('Your cat %cat_name has been added with your email %email and the image is uploaded successfully.', [
+        '%cat_name' => $cat_name,
+        '%email' => $email,
+    ]),
+      NULL,
+      ['type' => 'status']));
 
     // Reset form state and rebuild the form
     $form_state->setRebuild();
@@ -282,7 +307,7 @@ class MatthewCatsForm extends FormBase {
     $form_state->setUserInput([]);
 
     // Use the FormBuilder service to rebuild the form
-    $form_builder = \Drupal::formBuilder();
+    $form_builder = Drupal::formBuilder();
     $rebuilt_form = $form_builder->rebuildForm($this->getFormId(), $form_state, $form);
 
     // Replace the old form with the new one

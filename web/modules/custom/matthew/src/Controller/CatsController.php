@@ -3,14 +3,8 @@
 namespace Drupal\matthew\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Url;
-use Drupal\file\Entity\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Drupal\Core\Link;
 
 /**
  * Controller for the Cats page.
@@ -20,14 +14,14 @@ class CatsController extends ControllerBase {
   /**
    * The form builder service.
    *
-   * @var \Drupal\Core\Form\FormBuilderInterface
+   * @var FormBuilderInterface
    */
   protected $formBuilder;
 
   /**
    * Constructs a new object.
    *
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   * @param FormBuilderInterface $form_builder
    *   The form builder service.
    */
   public function __construct(FormBuilderInterface $form_builder) {
@@ -37,7 +31,7 @@ class CatsController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): CatsController|static {
     return new static(
       $container->get('form_builder')
     );
@@ -49,7 +43,7 @@ class CatsController extends ControllerBase {
    * @return array
    *   Render array for the Cats page content.
    */
-  public function content() {
+  public function content(): array {
     $form = $this->formBuilder->getForm('Drupal\matthew\Form\MatthewCatsForm');
 
     return [
@@ -64,15 +58,10 @@ class CatsController extends ControllerBase {
   /**
    * Returns a page with the latest cat records.
    */
-  public function latestCatsPage() {
-    // Get the form builder service.
-    $form_builder = \Drupal::service('form_builder');
-
+  public function latestCatsPage(): array {
     // Build the cats view form.
-    $form = $form_builder->getForm('\Drupal\matthew\Form\CatsViewForm');
-
     // Return the form.
-    return $form;
+    return $this->formBuilder->getForm('Drupal\matthew\Form\CatsViewForm');
   }
 
   /**
@@ -81,15 +70,10 @@ class CatsController extends ControllerBase {
    * @param int $id
    *   The ID of the cat record.
    */
-  public function editCat($id) {
-    // Get the form builder service.
-    $form_builder = \Drupal::service('form_builder');
-
+  public function editCat(int $id): array {
     // Build the edit form.
-    $form = $form_builder->getForm('\Drupal\matthew\Form\EditCatForm', $id);
-
     // Return the form.
-    return $form;
+    return $this->formBuilder->getForm('Drupal\matthew\Form\EditCatForm', $id);
   }
 
   /**
@@ -98,15 +82,10 @@ class CatsController extends ControllerBase {
    * @param int $id
    *   The ID of the cat record.
    */
-  public function deleteCat($id) {
-    // Get the form builder service.
-    $form_builder = \Drupal::service('form_builder');
-
+  public function deleteCat(int $id): array {
     // Build the confirmation form.
-    $form = $form_builder->getForm('\Drupal\matthew\Form\ConfirmDeleteCatForm', $id);
-
     // Return the form.
-    return $form;
+    return $this->formBuilder->getForm('Drupal\matthew\Form\ConfirmDeleteCatForm', $id);
   }
 
   /**
@@ -115,15 +94,10 @@ class CatsController extends ControllerBase {
    * @param array $ids
    *   The IDs of the cats record.
    */
-  public function deleteBulkCats($ids) {
-    // Get the form builder service.
-    $form_builder = \Drupal::service('form_builder');
-
+  public function deleteBulkCats(array $ids): array {
     // Build the confirmation form.
-    $form = $form_builder->getForm('\Drupal\matthew\Form\ConfirmBulkDeleteForm', $ids);
-
     // Return the form.
-    return $form;
+    return $this->formBuilder->getForm('Drupal\matthew\Form\ConfirmBulkDeleteForm', $ids);
   }
 
   /**
@@ -132,14 +106,9 @@ class CatsController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function list() {
-    // Get the form builder service.
-    $form_builder = \Drupal::service('form_builder');
-
+  public function list(): array {
     // Build the cats list form.
-    $form = $form_builder->getForm('\Drupal\matthew\Form\CatsListForm');
-
     // Return the form.
-    return $form;
+    return $this->formBuilder->getForm('Drupal\matthew\Form\CatsListForm');
   }
 }
