@@ -26,7 +26,7 @@ matthew.delete_cat:
   path: '/matthew/delete-cat/{id}/confirm'
   defaults:
     _controller: '\Drupal\matthew\Controller\CatsController::deleteCat'
-    _title: 'Delete cat record'
+    _title: 'Confirm record deletion'
   requirements:
     _permission: 'administer site configuration'
 
@@ -34,8 +34,7 @@ matthew.delete_cat_bulk:
   path: '/admin/structure/cats-list/confirm-delete-bulk/{ids}'
   defaults:
     _controller: '\Drupal\matthew\Controller\CatsController::deleteBulkCats'
-#    _form: '\Drupal\matthew\Form\ConfirmBulkDeleteForm'
-    _title: 'Confirm deletion'
+    _title: 'Confirm bulk deletion'
   requirements:
     _permission: 'administer site configuration'
 
@@ -43,6 +42,6 @@ matthew.cats_list:
   path: '/admin/structure/cats-list'
   defaults:
     _controller: '\Drupal\matthew\Controller\CatsController::list'
-    _title: 'Cats list'
+    _title: 'Cats admin list'
   requirements:
     _permission: 'administer site configuration'

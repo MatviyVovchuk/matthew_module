@@ -2,26 +2,31 @@
 
 namespace Drupal\matthew\Form;
 
+use Drupal;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Database\Database;
-use Drupal\file\Entity\File;
-use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\file\Entity\File;
 
+/**
+ * Class CatsListForm.
+ *
+ * Provides a list form with options to edit or delete cat records.
+ */
 class CatsListForm extends FormBase {
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'cats_list_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     // Define the table headers.
     $header = [
       'cat_name' => ['data' => $this->t('Name'), 'field' => 'cat_name'],
@@ -34,35 +39,46 @@ class CatsListForm extends FormBase {
     // Get the database connection.
     $connection = Database::getConnection();
 
-    // Build the query.
+    // Build the query to retrieve cat records.
     $query = $connection->select('matthew', 'm')
       ->fields('m', ['id', 'cat_name', 'user_email', 'created', 'cats_image_id'])
       ->orderBy('created', 'DESC');
 
-    // Execute the query.
+    // Execute the query and fetch results.
     $results = $query->execute()->fetchAll();
 
+    // Initialize rows array to store the cat records.
     $rows = [];
-    $file_url_generator = \Drupal::service('file_url_generator');
-    $date_formatter = \Drupal::service('date.formatter');
+    // Get the file URL generator service.
+    $file_url_generator = Drupal::service('file_url_generator');
+    // Get the date formatter service.
+    $date_formatter = Drupal::service('date.formatter');
 
     foreach ($results as $row) {
-      $image_url = '';
-      if ($row->cats_image_id) {
-        $file = File::load($row->cats_image_id);
-        if ($file) {
-          $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
-        }
-      }
+      // Load the file entity for the cat image.
+      $file = File::load($row->cats_image_id);
+      // Generate the absolute URL for the cat image.
+      $image_url = $file ? $file_url_generator->generateAbsoluteString($file->getFileUri()) : '';
 
-      $edit_link = Link::fromTextAndUrl($this->t('Edit'), Url::fromRoute('matthew.edit_cat', ['id' => $row->id]))->toString();
-      $delete_link = Link::fromTextAndUrl($this->t('Delete'), Url::fromRoute('matthew.delete_cat', ['id' => $row->id]))->toString();
-
+      // Build the row data.
       $rows[$row->id] = [
+        'select' => [
+          'data' => [
+            '#type' => 'checkbox',
+            '#attributes' => ['class' => ['select-cat']],
+          ],
+        ],
         'cat_name' => $row->cat_name,
         'user_email' => $row->user_email,
         'created' => $date_formatter->format($row->created, 'custom', 'd/m/Y H:i:s'),
-        'image' => $image_url ? ['data' => ['#theme' => 'image', '#uri' => $image_url, '#width' => 100, '#height' => 100]] : $this->t('No image'),
+        'image' => $image_url ? [
+          'data' => [
+            '#theme' => 'image',
+            '#uri' => $image_url,
+            '#width' => 100,
+            '#height' => 100,
+          ],
+        ] : $this->t('No image'),
         'operations' => [
           'data' => [
             '#type' => 'operations',
@@ -81,6 +97,7 @@ class CatsListForm extends FormBase {
       ];
     }
 
+    // Define the tableselect element.
     $form['cats_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
@@ -88,6 +105,7 @@ class CatsListForm extends FormBase {
       '#empty' => $this->t('No cats found.'),
     ];
 
+    // Add action buttons.
     $form['actions'] = [
       '#type' => 'actions',
       'delete_selected' => [
@@ -102,16 +120,22 @@ class CatsListForm extends FormBase {
     return $form;
   }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function submitForm(array &$form, FormStateInterface $form_state) {
-      $selected = array_filter($form_state->getValue('cats_table'));
-      if (empty($selected)) {
-        $this->messenger()->addWarning($this->t('No items selected for deletion.'));
-        return;
-      }
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    // Get the selected items.
+    $selected = array_filter($form_state->getValue('cats_table'));
 
-      $form_state->setRedirect('matthew.delete_cat_bulk', ['ids' => implode(',', array_keys($selected))]);
+    // Check if any items are selected.
+    if (empty($selected)) {
+      $this->messenger()->addWarning($this->t('No items selected for deletion.'));
+      return;
     }
+
+    // Redirect to the bulk delete confirmation page with selected IDs.
+    $form_state->setRedirect('matthew.delete_cat_bulk', [
+      'ids' => implode(',', array_keys($selected))
+    ]);
   }
+}

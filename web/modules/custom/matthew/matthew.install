@@ -1,14 +1,14 @@
 <?php
 
 use Drupal\Core\Database\Database;
-use Drupal\Core\Database\SchemaObjectInterface;
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\file\Entity\File;
 
 /**
  * Implements hook_install().
  */
-function matthew_install() {
+function matthew_install(): void
+{
   // Define the schema for the table.
   $schema = [
     'description' => 'Table for storing cat information.',
@@ -52,8 +52,10 @@ function matthew_install() {
 
 /**
  * Implements hook_uninstall().
+ * @throws EntityStorageException
  */
-function matthew_uninstall() {
+function matthew_uninstall(): void
+{
   // Get all file IDs from the matthew table
   $connection = Database::getConnection();
   $file_ids = $connection->select('matthew', 'm')
@@ -64,14 +66,11 @@ function matthew_uninstall() {
   // Delete files
   foreach ($file_ids as $fid) {
     $file = File::load($fid);
-    if ($file) {
-      // Delete the file entity
-      $file->delete();
-    }
+    $file?->delete();
   }
 
   // Remove all files in the 'public://cats' directory.
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   $directory = 'public://cats';
 
   if (is_dir($file_system->realpath($directory))) {
