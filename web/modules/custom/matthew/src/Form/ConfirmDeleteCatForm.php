@@ -11,7 +11,7 @@ use Drupal\file\Entity\File;
 /**
  * Form to confirm the deletion of a cat record.
  */
-class DeleteCatForm extends ConfirmFormBase {
+class ConfirmDeleteCatForm extends ConfirmFormBase {
 
   /**
    * The ID of the cat record.
