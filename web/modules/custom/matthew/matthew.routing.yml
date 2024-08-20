@@ -23,9 +23,9 @@ matthew.edit_cat:
     _permission: 'administer site configuration'
 
 matthew.delete_cat:
-  path: '/matthew/cat/{id}/delete'
+  path: '/matthew/delete-cat/{id}/confirm'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::deleteCat'
-    _title: 'Delete Cat'
+    _form: '\Drupal\matthew\Form\DeleteCatForm'
+    _title: 'Delete cat record'
   requirements:
     _permission: 'administer site configuration'
