@@ -18,14 +18,14 @@ matthew.edit_cat:
   path: '/matthew/cat/{id}/edit'
   defaults:
     _controller: '\Drupal\matthew\Controller\CatsController::editCat'
-    _title: 'Edit Cat'
+    _title: 'Edit cat record'
   requirements:
     _permission: 'administer site configuration'
 
 matthew.delete_cat:
   path: '/matthew/delete-cat/{id}/confirm'
   defaults:
-    _form: '\Drupal\matthew\Form\DeleteCatForm'
+    _controller: '\Drupal\matthew\Controller\CatsController::deleteCat'
     _title: 'Delete cat record'
   requirements:
     _permission: 'administer site configuration'

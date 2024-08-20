@@ -114,27 +114,36 @@ class CatsController extends ControllerBase {
   }
 
   /**
-   * Edit a cat record.
+   * Returns a form for editing a cat record.
    *
    * @param int $id
    *   The ID of the cat record.
    */
   public function editCat($id) {
-    // For now just a message.
-    return [
-      '#markup' => $this->t('Edit cat record with ID @id', ['@id' => $id]),
-    ];
+    // Get the form builder service.
+    $form_builder = \Drupal::service('form_builder');
+
+    // Build the edit form.
+    $form = $form_builder->getForm('\Drupal\matthew\Form\EditCatForm', $id);
+
+    // Return the form.
+    return $form;
   }
 
   /**
-   * Redirect to the delete confirmation form.
+   * Returns a form for delete confirmation a cat record.
    *
    * @param int $id
    *   The ID of the cat record.
    */
   public function deleteCat($id) {
-    // Redirect to the confirmation form.
-    $url = Url::fromRoute('matthew.delete_cat_confirm', ['id' => $id])->toString();
-    return new RedirectResponse($url);
+    // Get the form builder service.
+    $form_builder = \Drupal::service('form_builder');
+
+    // Build the confirmation form.
+    $form = $form_builder->getForm('\Drupal\matthew\Form\DeleteCatForm', $id);
+
+    // Return the form.
+    return $form;
   }
 }
