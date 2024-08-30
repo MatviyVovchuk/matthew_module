@@ -1,0 +1,8 @@
+services:
+  matthew.cat_service:
+    class: 'Drupal\matthew\Service\CatService'
+    arguments: ['@database', '@entity_type.manager']
+
+    logger.channel.matthew:
+      class: 'Drupal\Core\Logger\LoggerChannel'
+      arguments: [ 'matthew' ]

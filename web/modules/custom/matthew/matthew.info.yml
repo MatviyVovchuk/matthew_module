@@ -3,7 +3,7 @@ type: module
 description: 'Creates a page with a list of cats and a form where users can leave photos of their pets.'
 package: Custom
 version: 1.0
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10
 dependencies:
   - drupal:views
   - drupal:system
