@@ -1,47 +1,48 @@
-matthew.cats:
-  path: '/matthew/cats'
+matthew.add_cat:
+  path: '/matthew/cats/add'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::content'
-    _title: 'Cats Form'
+    _controller: '\Drupal\matthew\Controller\CatsController::add'
+    _title: 'Cats form'
   requirements:
     _permission: 'access content'
 
-matthew.view:
-  path: '/matthew/cats-view'
+matthew.user_cats_view:
+  path: '/matthew/cats'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::latestCatsPage'
-    _title: 'Cats Page'
+#    _form: '\Drupal\matthew\Form\CatsViewPage'
+    _controller: '\Drupal\matthew\Controller\CatsController::userCatsView'
+    _title: 'Cats page'
   requirements:
     _permission: 'access content'
 
 matthew.edit_cat:
-  path: '/matthew/cat/{id}/edit'
+  path: '/matthew/cats/edit/{id}'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::editCat'
+    _form: '\Drupal\matthew\Form\Admin\EditCatForm'
     _title: 'Edit cat record'
   requirements:
     _permission: 'administer site configuration'
 
 matthew.delete_cat:
-  path: '/matthew/delete-cat/{id}/confirm'
+  path: '/matthew/confirm-delete-cat/{id}'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::deleteCat'
+    _form: '\Drupal\matthew\Form\Admin\ConfirmDeleteCatPage'
     _title: 'Confirm record deletion'
   requirements:
     _permission: 'administer site configuration'
 
 matthew.delete_cat_bulk:
-  path: '/admin/structure/cats-list/confirm-delete-bulk/{ids}'
+  path: '/matthew/confirm-delete-cats/{ids}'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::deleteBulkCats'
-    _title: 'Confirm bulk deletion'
+    _form: '\Drupal\matthew\Form\Admin\ConfirmBulkDeletePage'
+    _title: 'Confirm records deletion'
   requirements:
     _permission: 'administer site configuration'
 
-matthew.cats_list:
-  path: '/admin/structure/cats-list'
+matthew.admin_cats_page:
+  path: '/admin/structure/matthew-cats'
   defaults:
-    _controller: '\Drupal\matthew\Controller\CatsController::list'
-    _title: 'Cats admin list'
+    _form: '\Drupal\matthew\Form\Admin\CatsPage'
+    _title: 'Admin cats page'
   requirements:
     _permission: 'administer site configuration'
