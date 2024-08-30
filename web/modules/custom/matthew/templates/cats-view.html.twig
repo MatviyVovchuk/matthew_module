@@ -1,5 +1,3 @@
-{# modules/custom/matthew/templates/cats-view.html.twig #}
-
 <div class="cats-container">
   {% for row in rows %}
     <div class="cat-entry">
@@ -16,8 +14,8 @@
       </div>
       {% if row.image %}
         <div class="cat-image-container">
-          <a href="{{ row.image.data['#uri'] }}" class="cat-image-link" target="_blank">
-            <img src="{{ row.image.data['#uri'] }}" alt="{{ 'Cat image'|t }}" class="cat-image">
+          <a href="{{ row.image.data.uri }}" class="cat-image-link" target="_blank">
+            <img src="{{ row.image.data.uri }}" alt="{{ row.image.data.alt }}" class="cat-image">
           </a>
         </div>
       {% else %}

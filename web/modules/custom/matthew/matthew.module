@@ -1,15 +1,17 @@
 <?php
 
 /**
- * Implements hook_theme().
- * @param $existing
- * @param $type
- * @param $theme
- * @param $path
- * @return array
+ * @file
+ * Defines hook implementations for the Matthew module.
  */
-function matthew_theme($existing, $type, $theme, $path): array {
+
+/**
+ * Implements hook_theme().
+ */
+function matthew_theme(array $existing, string $type, string $theme, string $path): array {
   $extensionPathResolver = Drupal::service('extension.path.resolver');
+  $path = $extensionPathResolver->getPath('module', 'matthew') . '/templates';
+
   return [
     'cats' => [
       'variables' => [
@@ -17,27 +19,15 @@ function matthew_theme($existing, $type, $theme, $path): array {
         'form' => [],
       ],
       'template' => 'cats',
-      'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
+      'path' => $path,
     ],
     'cats-view' => [
       'variables' => [
         'content' => NULL,
-        'rows' => []
+        'rows' => [],
       ],
       'template' => 'cats-view',
-      'path' => $extensionPathResolver->getPath('module', 'matthew') . '/templates',
+      'path' => $path,
     ],
   ];
-}
-
-/**
- * Implements hook_page_attachments().
- * @param array $attachments
- */
-function matthew_page_attachments(array &$attachments): void
-{
-  $route_name = Drupal::routeMatch()->getRouteName();
-  if ($route_name == 'matthew.view') {
-    $attachments['#attached']['library'][] = 'matthew/cat-view-styles';
-  }
 }
