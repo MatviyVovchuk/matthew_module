@@ -6,10 +6,11 @@ matthew.add_cat:
   requirements:
     _permission: 'access content'
 
-matthew.main_cats_view:
+matthew.user_cats_view:
   path: '/matthew/cats'
   defaults:
-    _form: '\Drupal\matthew\Form\CatsViewPage'
+#    _form: '\Drupal\matthew\Form\CatsViewPage'
+    _controller: '\Drupal\matthew\Controller\CatsController::userCatsView'
     _title: 'Cats page'
   requirements:
     _permission: 'access content'

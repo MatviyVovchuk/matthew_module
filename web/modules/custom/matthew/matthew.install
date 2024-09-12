@@ -1,16 +1,20 @@
 <?php
 
-use Drupal\Core\Database\Database;
-use Drupal\Core\Entity\EntityStorageException;
+/**
+ * @file
+ * Install, update and uninstall functions for the matthew module.
+ */
+
+use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\file\Entity\File;
+use Drupal\image\Entity\ImageStyle;
 
 /**
- * Implements hook_install().
+ * Implements hook_schema().
  */
-function matthew_install(): void
-{
+function matthew_schema(): array {
   // Define the schema for the table.
-  $schema = [
+  $schema['matthew'] = [
     'description' => 'Table for storing cat information.',
     'fields' => [
       'id' => [
@@ -44,40 +48,202 @@ function matthew_install(): void
       ],
     ],
     'primary key' => ['id'],
+    'indexes' => [
+      'created' => ['created'],
+    ],
   ];
 
-  // Create the table.
-  Database::getConnection()->schema()->createTable('matthew', $schema);
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function matthew_install(): void {
+  // Create custom date and time format 'matthew_guestbook_date_format'.
+  _matthew_create_date_format([
+    'id' => 'matthew_date_format',
+    'label' => 'Matthew date format',
+    'pattern' => 'Y-m-d H:i:s',
+  ]);
+
+  // Create custom image styles.
+  _matthew_create_image_style('matthew_cats', 'Matthew Cats');
+  _matthew_create_image_style('matthew_admin_cats', 'Matthew Admin Cats', TRUE);
 }
 
 /**
  * Implements hook_uninstall().
- * @throws EntityStorageException
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function matthew_uninstall(): void
-{
-  // Get all file IDs from the matthew table
-  $connection = Database::getConnection();
-  $file_ids = $connection->select('matthew', 'm')
-    ->fields('m', ['cats_image_id'])
+function matthew_uninstall(): void {
+  // Delete the 'matthew_guestbook_date_format' date and time format.
+  _matthew_delete_date_format('matthew_date_format');
+
+  // Delete custom image styles.
+  _matthew_delete_image_style('matthew_cats');
+  _matthew_delete_image_style('matthew_admin_cats');
+
+  // Delete image files and drop database table.
+  _matthew_drop_table('matthew', 'cats_image_id', 'public://cats');
+
+  // Clear all caches.
+  drupal_flush_all_caches();
+}
+
+/**
+ * Drops the specified table, deletes associated files, and removes a directory.
+ *
+ * @param string $table_name
+ *   The name of the table to drop.
+ * @param string $file_field
+ *   The name of the field that contains the file IDs.
+ * @param string $directory
+ *   The directory to delete.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ *   Thrown if the file deletion fails.
+ */
+function _matthew_drop_table(string $table_name, string $file_field, string $directory): void {
+  // Get the database connection.
+  $connection = \Drupal::database();
+
+  // Get all file IDs from the specified table.
+  $file_ids = $connection->select($table_name, 't')
+    ->fields('t', [$file_field])
     ->execute()
     ->fetchCol();
 
-  // Delete files
+  // Load and delete each file entity.
   foreach ($file_ids as $fid) {
     $file = File::load($fid);
-    $file?->delete();
+    if ($file) {
+      $file->delete();
+    }
   }
 
-  // Remove all files in the 'public://cats' directory.
-  $file_system = Drupal::service('file_system');
-  $directory = 'public://cats';
+  // Get the file system service.
+  $file_system = \Drupal::service('file_system');
+  $real_directory = $file_system->realpath($directory);
 
-  if (is_dir($file_system->realpath($directory))) {
-    // Delete the directory and all its contents.
+  // Remove the specified directory and its contents if it exists.
+  if (is_dir($real_directory)) {
     $file_system->deleteRecursive($directory);
   }
 
-  // Drop the table when the module is uninstalled.
-  Database::getConnection()->schema()->dropTable('matthew');
+  // Drop the specified table if it exists.
+  if ($connection->schema()->tableExists($table_name)) {
+    $connection->schema()->dropTable($table_name);
+  }
+
+  // Log the table drop event.
+  \Drupal::logger('matthew_module')->notice('Dropped table @table and deleted associated files and directory @directory.', [
+    '@table' => $table_name,
+    '@directory' => $directory,
+  ]);
+}
+
+/**
+ * Create a custom image style.
+ *
+ * @param string $style_name
+ *   The machine name of the image style to create.
+ * @param string $style_label
+ *   The label of the image style.
+ * @param bool $use_resize_effect
+ *   *   Whether to add a default image resize effect with fixed dimensions
+ *   *   (100x100) to the image style.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _matthew_create_image_style(string $style_name, string $style_label, bool $use_resize_effect = FALSE): void {
+  // Check if the style already exists.
+  $style = ImageStyle::load($style_name);
+  if (!$style) {
+    // Create a new image style entity.
+    $style = ImageStyle::create([
+      'name' => $style_name,
+      'label' => $style_label,
+    ]);
+
+    // Add the image resize effect if the flag is true.
+    if ($use_resize_effect) {
+      $style->addImageEffect([
+        'id' => 'image_resize',
+        'weight' => 0,
+        'data' => [
+          'width' => 100,
+          'height' => 100,
+        ],
+      ]);
+    }
+
+    // Save the new style.
+    $style->save();
+
+    \Drupal::logger('matthew_guestbook')->notice('Created image style: @style', ['@style' => $style_label]);
+  }
+}
+
+/**
+ * Delete a custom image style.
+ *
+ * @param string $style_name
+ *   The machine name of the image style to delete.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _matthew_delete_image_style(string $style_name): void {
+  $style = ImageStyle::load($style_name);
+  if ($style) {
+    $style->delete();
+    \Drupal::logger('matthew_guestbook')->notice('Deleted image style: @style', ['@style' => $style_name]);
+  }
+}
+
+/**
+ * Create a custom date format.
+ *
+ * @param array $format_details
+ *   An associative array containing the following keys:
+ *   - 'id': The machine name of the date format (required).
+ *   - 'label': The label of the date format (required).
+ *   - 'pattern': The date format pattern (required).
+ *
+ * @throws \InvalidArgumentException|EntityStorageException
+ *   If any of the required keys are missing in the $format_details array.
+ */
+function _matthew_create_date_format(array $format_details): void {
+  // Ensure all required details are provided.
+  if (empty($format_details['id']) || empty($format_details['label']) || empty($format_details['pattern'])) {
+    throw new \InvalidArgumentException('The keys "id", "label", and "pattern" are required.');
+  }
+
+  // Check if this date format already exists.
+  if (!DateFormat::load($format_details['id'])) {
+    // Create a new date format.
+    $format = DateFormat::create($format_details);
+    $format->save();
+
+    \Drupal::logger('matthew_guestbook')->notice('Created date format: @id', ['@id' => $format_details['id']]);
+  }
+}
+
+/**
+ * Delete a custom date format.
+ *
+ * @param string $format_id
+ *   The machine name of the date format to delete.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _matthew_delete_date_format(string $format_id): void {
+  // Load and delete the date format, if it exists.
+  if ($format = DateFormat::load($format_id)) {
+    $format->delete();
+    \Drupal::logger('matthew_guestbook')->notice('Deleted date format: @id', ['@id' => $format_id]);
+  }
 }

@@ -25,6 +25,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AddCatForm extends FormBase {
 
+  const CAT_MAX_SIZE = 2 * 1024 * 1024;
+  const ALLOWED_EXTENSIONS = 'jpeg jpg png';
+  const UPLOAD_LOCATION = 'public://cats';
+
   /**
    * The logger service.
    *
@@ -124,12 +128,15 @@ class AddCatForm extends FormBase {
     $form['image'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload an image of your cat:'),
-      '#description' => $this->t('Allowed formats: jpeg, jpg, png. Maximum file size: 2 MB.'),
+      '#description' => $this->t('Allowed formats: @formats. Max file size: @size.', [
+        '@formats' => self::ALLOWED_EXTENSIONS,
+        '@size' => format_size(self::CAT_MAX_SIZE),
+      ]),
       '#required' => TRUE,
-      '#upload_location' => 'public://cats',
+      '#upload_location' => self::UPLOAD_LOCATION,
       '#upload_validators' => [
-        'file_validate_extensions' => ['jpeg jpg png'],
-        'file_validate_size' => [2097152],
+        'file_validate_extensions' => [self::ALLOWED_EXTENSIONS],
+        'file_validate_size' => [self::CAT_MAX_SIZE],
       ],
       '#ajax' => [
         'callback' => '::validateImage',
@@ -362,7 +369,7 @@ class AddCatForm extends FormBase {
       $this->logger->error('Failed to add cat record. Error: @message', [
         '@message' => $e->getMessage(),
       ]);
-      $this->messenger()->addError($this->t('Failed to update the record. Please try again later.'));
+      $this->messenger()->addError($this->t('Failed to add the record. Please try again later.'));
     }
 
     return $response;

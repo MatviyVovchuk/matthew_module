@@ -30,7 +30,7 @@ class EditCatForm extends AddCatForm {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): EditCatForm|AddCatForm|static {
     return new static(
       $container->get('logger.channel.default'),
       $container->get('matthew.cat_service'),
@@ -88,7 +88,7 @@ class EditCatForm extends AddCatForm {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $fields = [
       'cat_name' => $form_state->getValue('cat_name'),
       'user_email' => $form_state->getValue('email'),
@@ -102,8 +102,8 @@ class EditCatForm extends AddCatForm {
       // Display a status message and redirect to the cats list.
       $this->messenger()->addStatus($this->t('Cat information updated successfully.'));
 
-      // Redirect to the latest cats page.
-      $form_state->setRedirect('matthew.main_cats_view')->disableRedirect(FALSE)->setRebuild(FALSE);
+      // Redirect to the cats page.
+      $form_state->setRedirect('matthew.user_cats_view')->disableRedirect(FALSE)->setRebuild(FALSE);
     }
     catch (\Exception $e) {
       $this->logger->error('Failed to update cat record with ID @id. Error: @message', [

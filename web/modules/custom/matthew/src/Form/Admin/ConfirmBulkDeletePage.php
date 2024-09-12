@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Url;
 use Drupal\matthew\Service\CatService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -15,7 +16,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides a form for confirming the bulk deletion of cat records.
  */
 class ConfirmBulkDeletePage extends ConfirmFormBase {
-
   use MessengerTrait;
 
   /**
@@ -26,11 +26,41 @@ class ConfirmBulkDeletePage extends ConfirmFormBase {
   protected array $ids;
 
   /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * The cat service instance.
    *
    * @var \Drupal\matthew\Service\CatService
    */
   protected $catService;
+
+  /**
+   * Constructs a new object.
+   *
+   * @param \Drupal\matthew\Service\CatService $catService
+   *   The cat service.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service.
+   */
+  public function __construct(CatService $catService, LoggerInterface $logger) {
+    $this->catService = $catService;
+    $this->logger = $logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('matthew.cat_service'),
+      $container->get('logger.channel.default')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -72,25 +102,6 @@ class ConfirmBulkDeletePage extends ConfirmFormBase {
    */
   public function getCancelText(): string {
     return $this->t('Cancel');
-  }
-
-  /**
-   * Constructs a new object.
-   *
-   * @param \Drupal\matthew\Service\CatService $catService
-   *   The cat service.
-   */
-  public function __construct(CatService $catService,) {
-    $this->catService = $catService;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('matthew.cat_service')
-    );
   }
 
   /**
@@ -154,9 +165,11 @@ class ConfirmBulkDeletePage extends ConfirmFormBase {
       $form_state->setRedirectUrl($this->getCancelUrl());
     }
     catch (\Exception $e) {
-      \Drupal::logger('matthew')->error('Failed to delete cats records. Error: @message', [
+      $this->logger->error('Failed to delete cats records with IDs @id. Error: @message', [
+        '@id' => $this->ids,
         '@message' => $e->getMessage(),
       ]);
+      $this->messenger()->addError($this->t('Failed to delete cats the records. Please try again later.'));
     }
   }
 

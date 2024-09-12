@@ -2,10 +2,7 @@
 
 namespace Drupal\matthew\Form\Admin;
 
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Datetime\DateFormatterInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -18,32 +15,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CatsPage extends FormBase {
 
   /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
-   * The file URL generator service.
-   *
-   * @var \Drupal\Core\File\FileUrlGeneratorInterface
-   */
-  protected $fileUrlGenerator;
-
-  /**
    * The date formatter service.
    *
    * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
   protected $dateFormatter;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
 
   /**
    * The cat service instance.
@@ -57,21 +33,12 @@ class CatsPage extends FormBase {
    *
    * @param \Drupal\matthew\Service\CatService $catService
    *   The cat service.
-   * @param \Drupal\Core\Database\Connection $database
-   *   The database connection.
-   * @param \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator
-   *   The file URL generator service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    */
-  public function __construct(CatService $catService, Connection $database, FileUrlGeneratorInterface $file_url_generator, DateFormatterInterface $date_formatter, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(CatService $catService, DateFormatterInterface $date_formatter) {
     $this->catService = $catService;
-    $this->database = $database;
-    $this->fileUrlGenerator = $file_url_generator;
     $this->dateFormatter = $date_formatter;
-    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -80,10 +47,7 @@ class CatsPage extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('matthew.cat_service'),
-      $container->get('database'),
-      $container->get('file_url_generator'),
-      $container->get('date.formatter'),
-      $container->get('entity_type.manager')
+      $container->get('date.formatter')
     );
   }
 
@@ -123,34 +87,15 @@ class CatsPage extends FormBase {
     $rows = [];
 
     foreach ($results as $record) {
-      // Load the file entity for the cat image.
-      $file = $this->entityTypeManager->getStorage('file')->load($record->cats_image_id);
-      // Generate the absolute URL for the cat image.
-      $image_url = $file ? $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri()) : '';
+      // Generate render array for the cat image using the new method.
+      $image_render_array = $this->catService->getImageFileRenderArray($record->cats_image_id, 'matthew_admin_cats');
 
       // Build the row data.
       $rows[$record->id] = [
-        'select' => [
-          'data' => [
-            '#type' => 'checkbox',
-            '#attributes' => [
-              'class' => [
-                'select-cat',
-              ],
-            ],
-          ],
-        ],
         'cat_name' => $record->cat_name,
         'user_email' => $record->user_email,
-        'created' => $this->dateFormatter->format($record->created, 'custom', 'd/m/Y H:i:s'),
-        'image' => $image_url ? [
-          'data' => [
-            '#theme' => 'image',
-            '#uri' => $image_url,
-            '#width' => 100,
-            '#height' => 100,
-          ],
-        ] : $this->t('No image'),
+        'created' => $this->dateFormatter->format($record->created, 'matthew_date_format'),
+        'image' => !empty($image_render_array) ? ['data' => $image_render_array] : $this->t('No image'),
         'operations' => [
           'data' => [
             '#type' => 'operations',

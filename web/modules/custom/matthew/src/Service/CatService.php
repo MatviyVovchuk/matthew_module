@@ -127,7 +127,8 @@ class CatService {
    * @return object|null
    *   The cat record, or NULL if not found.
    */
-  public function getCatById($id) {
+  public function getCatById($id): object|array|null
+  {
     return $this->getCats(['id' => $id], ['id', 'cat_name', 'user_email'], TRUE);
   }
 
@@ -153,7 +154,8 @@ class CatService {
    * @return int
    *   The number of affected rows.
    */
-  public function deleteCatsByIds(array $ids) {
+  public function deleteCatsByIds(array $ids): int
+  {
     $conditions = ['id' => $ids];
     $fields = ['cats_image_id'];
 
@@ -173,8 +175,7 @@ class CatService {
       }
     }
 
-    // Delete records from the 'matthew' table
-    // where 'id' is in the array of IDs.
+    // Delete records where 'id' is in the array of IDs.
     return $this->database->delete('matthew')
       ->condition('id', $ids, 'IN')
       ->execute();
@@ -189,7 +190,8 @@ class CatService {
    * @return int
    *   The number of affected rows.
    */
-  public function deleteCatById($id) {
+  public function deleteCatById($id): int
+  {
     $conditions = ['id' => $id];
     $fields = ['cats_image_id'];
     $single = TRUE;
@@ -252,6 +254,42 @@ class CatService {
       ->fields($fieldsToUpdate)
       ->condition('id', $id)
       ->execute();
+  }
+
+  /**
+   * Get the render array for a given file entity ID.
+   *
+   * @param mixed $file_id
+   *   The ID of the file entity, or null if the field is empty.
+   * @param string $image_style
+   *   The image style to apply.
+   *
+   * @return array
+   *   A render array for the image,
+   *   or an empty array if the file could not be loaded.
+   */
+  public function getImageFileRenderArray(mixed $file_id, string $image_style): array {
+    if (empty($file_id)) {
+      return [];
+    }
+
+    // Load the file entity using the file ID.
+    $file = $this->entityTypeManager->getStorage('file')->load($file_id);
+
+    if ($file) {
+      return [
+        '#theme' => 'image_style',
+        '#style_name' => $image_style,
+        '#uri' => $file->getFileUri(),
+        '#alt' => $file->getFilename(),
+        '#attributes' => [
+          'class' => ['cat-image'],
+        ],
+      ];
+    }
+
+    // Return an empty array if the file entity could not be loaded.
+    return [];
   }
 
 }

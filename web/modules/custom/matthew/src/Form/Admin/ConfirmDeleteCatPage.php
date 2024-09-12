@@ -6,6 +6,7 @@ use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\matthew\Service\CatService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,6 +21,13 @@ class ConfirmDeleteCatPage extends ConfirmFormBase {
    */
   protected int $id;
 
+  /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
 
   /**
    * The cat service instance.
@@ -29,10 +37,32 @@ class ConfirmDeleteCatPage extends ConfirmFormBase {
   protected $catService;
 
   /**
+   * Constructs a new object.
+   *
+   * @param \Drupal\matthew\Service\CatService $catService
+   *   The cat service.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service.
+   */
+  public function __construct(CatService $catService, LoggerInterface $logger) {
+    $this->catService = $catService;
+    $this->logger = $logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('matthew.cat_service'),
+      $container->get('logger.channel.default')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    // Return the unique ID of the form.
     return 'confirm_delete_form';
   }
 
@@ -40,7 +70,6 @@ class ConfirmDeleteCatPage extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion(): string {
-    // Return the confirmation question text.
     return $this->t('Are you sure you want to delete this cat record?');
   }
 
@@ -49,7 +78,7 @@ class ConfirmDeleteCatPage extends ConfirmFormBase {
    */
   public function getCancelUrl(): Url {
     // Return the URL to cancel and go back to the cat view page.
-    return new Url('matthew.main_cats_view');
+    return new Url('matthew.user_cats_view');
   }
 
   /**
@@ -73,25 +102,6 @@ class ConfirmDeleteCatPage extends ConfirmFormBase {
   public function getCancelText(): string {
     // Return the text for the cancel button.
     return $this->t('Cancel');
-  }
-
-  /**
-   * Constructs a new object.
-   *
-   * @param \Drupal\matthew\Service\CatService $catService
-   *   The cat service.
-   */
-  public function __construct(CatService $catService) {
-    $this->catService = $catService;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('matthew.cat_service')
-    );
   }
 
   /**
@@ -148,11 +158,11 @@ class ConfirmDeleteCatPage extends ConfirmFormBase {
       $form_state->setRedirectUrl($this->getCancelUrl());
     }
     catch (\Exception $e) {
-      \Drupal::logger('matthew')->error('Failed to delete cat record with ID @id. Error: @message', [
+      $this->logger->error('Failed to delete cat record with ID @id. Error: @message', [
         '@id' => $this->id,
         '@message' => $e->getMessage(),
       ]);
-
+      $this->messenger()->addError($this->t('Failed to delete cat the record. Please try again later.'));
     }
   }
 

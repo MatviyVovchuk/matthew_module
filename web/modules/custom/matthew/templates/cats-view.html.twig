@@ -14,8 +14,8 @@
       </div>
       {% if row.image %}
         <div class="cat-image-container">
-          <a href="{{ row.image.data.uri }}" class="cat-image-link" target="_blank">
-            <img src="{{ row.image.data.uri }}" alt="{{ row.image.data.alt }}" class="cat-image">
+          <a href="{{ file_url(row.image['#uri']) }}" class="cat-image-link" target="_blank">
+            {{ row.image }}
           </a>
         </div>
       {% else %}

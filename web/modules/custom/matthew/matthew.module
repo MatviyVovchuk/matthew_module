@@ -29,5 +29,13 @@ function matthew_theme(array $existing, string $type, string $theme, string $pat
       'template' => 'cats-view',
       'path' => $path,
     ],
+    'matthew-admin-cats' => [
+      'variables' => [
+        'content' => NULL,
+        'rows' => [],
+      ],
+      'template' => 'matthew-admin-cats',
+      'path' => $path,
+    ],
   ];
 }
